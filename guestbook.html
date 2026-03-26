@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>방명록 — HYESEUNG'S SKY</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .guest-page {
+      position: relative;
+      min-height: 100dvh;
+      z-index: 1;
+      padding: 20px 16px 120px;
+    }
+
+    /* 헤더 */
+    .guest-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+
+    .guest-header a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 0.3s;
+    }
+
+    .guest-header a:hover { color: var(--text); }
+
+    /* 제목 */
+    .guest-title {
+      margin-bottom: 32px;
+    }
+
+    .guest-title h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 32px;
+      font-weight: 300;
+      font-style: italic;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .guest-title p {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    /* 카드 목록 */
+    .card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* 별자리 카드 */
+    .constellation-card {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 16px;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 12px;
+      animation: fade-in 0.4s ease-out both;
+      transition: border-color 0.3s;
+    }
+
+    .constellation-card:hover {
+      border-color: rgba(255,255,255,0.15);
+    }
+
+    /* 별자리 썸네일 */
+    .card-thumb {
+      width: 56px;
+      height: 56px;
+      flex-shrink: 0;
+      border-radius: 8px;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+
+    .card-thumb canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .card-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .card-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 16px;
+      font-weight: 400;
+      font-style: italic;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .card-message {
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    .card-date {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 6px;
+    }
+
+    /* 빈 상태 */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    .empty-state .star-icon {
+      font-size: 32px;
+      margin-bottom: 16px;
+      display: block;
+      opacity: 0.4;
+    }
+
+    .empty-state p {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px;
+      font-style: italic;
+      color: var(--text-dim);
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="starfield" id="starfield"></div>
+
+  <div class="guest-page">
+    <!-- 헤더 -->
+    <div class="guest-header">
+      <a href="index.html">← 밤하늘로</a>
+      <a href="draw.html" class="btn-ghost" style="padding: 0;">+ 별자리 만들기</a>
+    </div>
+
+    <!-- 제목 -->
+    <div class="guest-title fade-in">
+      <h2>방명록</h2>
+      <p><span id="totalCount">0</span>개의 별자리</p>
+    </div>
+
+    <!-- 카드 목록 -->
+    <div class="card-list" id="cardList">
+      <div class="empty-state" id="emptyState">
+        <span class="star-icon">✦</span>
+        <p>아직 별자리가 없어요</p>
+        <a href="draw.html" class="btn-primary" style="font-size: 15px;">첫 별자리 만들기</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 별 배경 -->
+  <script>
+    (function() {
+      const sf = document.getElementById('starfield');
+      for (let i = 0; i < 150; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'starfield-dot';
+        dot.style.left = Math.random() * 100 + '%';
+        dot.style.top = Math.random() * 100 + '%';
+        dot.style.width = (0.5 + Math.random() * 2) + 'px';
+        dot.style.height = dot.style.width;
+        dot.style.animationDuration = (2 + Math.random() * 5) + 's';
+        dot.style.animationDelay = Math.random() * 4 + 's';
+        sf.appendChild(dot);
+      }
+    })();
+  </script>
+
+  <script type="module">
+    import {
+      db, collection, query, orderBy, onSnapshot
+    } from './firebase-config.js';
+
+    const cardList = document.getElementById('cardList');
+    const emptyState = document.getElementById('emptyState');
+    const totalCount = document.getElementById('totalCount');
+
+    function formatDate(timestamp) {
+      if (!timestamp) return '';
+      const d = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}.${mm}.${dd}`;
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function parseColor(color) {
+      if (!color) return { r: 200, g: 220, b: 255 };
+      const m = color.match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+      return m ? { r: +m[1], g: +m[2], b: +m[3] } : { r: 200, g: 220, b: 255 };
+    }
+
+    // 작은 캔버스에 별자리 렌더링
+    function renderThumb(canvas, stars, color) {
+      const ctx = canvas.getContext('2d');
+      const s = 56;
+      canvas.width = s * 2;
+      canvas.height = s * 2;
+
+      if (stars.length === 0) return;
+
+      const { r, g, b } = parseColor(color);
+
+      const pts = stars.map(st => ({
+        x: st.x * s * 2 * 0.8 + s * 0.2,
+        y: st.y * s * 2 * 0.8 + s * 0.2,
+      }));
+
+      // 연결선
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) {
+        ctx.lineTo(pts[i].x, pts[i].y);
+      }
+      ctx.strokeStyle = `rgba(${r},${g},${b},0.3)`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // 별점
+      for (const p of pts) {
+        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 5);
+        grad.addColorStop(0, `rgba(${r},${g},${b},0.7)`);
+        grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgb(${r},${g},${b})`;
+        ctx.fill();
+      }
+    }
+
+    function renderCard(data, index) {
+      const card = document.createElement('div');
+      card.className = 'constellation-card';
+      card.style.animationDelay = (index * 0.06) + 's';
+
+      // 썸네일
+      const thumbWrap = document.createElement('div');
+      thumbWrap.className = 'card-thumb';
+      const thumbCanvas = document.createElement('canvas');
+      thumbWrap.appendChild(thumbCanvas);
+
+      // 텍스트
+      const body = document.createElement('div');
+      body.className = 'card-body';
+
+      const name = data.name || '이름 없는 별자리';
+      body.innerHTML = `
+        <div class="card-name">${escapeHtml(name)}</div>
+        ${data.message ? `<div class="card-message">${escapeHtml(data.message)}</div>` : ''}
+        <div class="card-date">${formatDate(data.timestamp)}</div>
+      `;
+
+      card.appendChild(thumbWrap);
+      card.appendChild(body);
+
+      // 썸네일 렌더링
+      requestAnimationFrame(() => {
+        renderThumb(thumbCanvas, data.stars || [], data.color);
+      });
+
+      return card;
+    }
+
+    // 실시간 구독
+    const q = query(collection(db, 'entries'), orderBy('timestamp', 'desc'));
+    onSnapshot(q, (snapshot) => {
+      const existingCards = cardList.querySelectorAll('.constellation-card');
+      existingCards.forEach(c => c.remove());
+
+      const count = snapshot.size;
+      totalCount.textContent = count;
+
+      if (count === 0) {
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+        let i = 0;
+        snapshot.forEach((doc) => {
+          cardList.appendChild(renderCard(doc.data(), i));
+          i++;
+        });
+      }
+    });
+  </script>
+</body>
+</html>

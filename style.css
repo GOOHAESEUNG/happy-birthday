@@ -1,0 +1,210 @@
+/* ===== 혜승이 생일 — 밤하늘 별자리 테마 ===== */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500&display=swap');
+
+:root {
+  --sky: #050810;
+  --star: #f0f4ff;
+  --glow: rgba(200, 220, 255, 0.4);
+  --glow-strong: rgba(200, 220, 255, 0.8);
+  --accent: rgba(180, 200, 255, 0.9);
+  --text: #e8ecf4;
+  --text-dim: rgba(200, 210, 230, 0.5);
+  --surface: rgba(255, 255, 255, 0.04);
+  --surface-border: rgba(255, 255, 255, 0.08);
+}
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  background: #000;
+}
+
+body {
+  max-width: 390px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  background: var(--sky);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- 타이포 --- */
+.font-serif {
+  font-family: 'Cormorant Garamond', serif;
+}
+
+.font-sans {
+  font-family: 'Inter', sans-serif;
+}
+
+/* --- 별이 박힌 밤하늘 배경 --- */
+.starfield {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.starfield-dot {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: var(--star);
+  border-radius: 50%;
+  animation: twinkle ease-in-out infinite alternate;
+}
+
+@keyframes twinkle {
+  0%   { opacity: 0.2; }
+  100% { opacity: 1; }
+}
+
+/* --- 글로우 유틸 --- */
+.glow-text {
+  text-shadow: 0 0 20px rgba(200, 220, 255, 0.3);
+}
+
+.glow-dot {
+  box-shadow: 0 0 6px 2px var(--glow);
+}
+
+/* --- 반투명 바 (하단 오버레이) --- */
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 390px;
+  z-index: 50;
+  padding: 24px 20px 28px;
+  background: linear-gradient(to top, rgba(5,8,16,0.95) 0%, rgba(5,8,16,0.7) 60%, transparent 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+/* --- 버튼 --- */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 32px;
+  background: transparent;
+  color: var(--text);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  backdrop-filter: blur(8px);
+}
+
+.btn-primary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 20px rgba(200, 220, 255, 0.15);
+}
+
+.btn-primary:active {
+  transform: scale(0.97);
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: transparent;
+  color: var(--text-dim);
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: color 0.3s;
+  text-decoration: none;
+}
+
+.btn-ghost:hover {
+  color: var(--text);
+}
+
+/* --- 네비게이션 --- */
+.nav-row {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+}
+
+/* --- 입력 --- */
+.input-field {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.input-field:focus {
+  border-color: rgba(200, 220, 255, 0.4);
+}
+
+.input-field::placeholder {
+  color: var(--text-dim);
+}
+
+/* --- 카드 --- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  padding: 16px;
+  transition: border-color 0.3s;
+}
+
+.card:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* --- 페이드 인 --- */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fade-in 0.5s ease-out both;
+}
+
+/* --- 스크롤바 --- */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+/* --- 숨김 --- */
+.hidden { display: none !important; }

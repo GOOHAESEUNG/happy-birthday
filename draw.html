@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>별자리 만들기 — HYESEUNG'S SKY</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .draw-page {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* 상단 헤더 */
+    .draw-header {
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .draw-header a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 0.3s;
+    }
+
+    .draw-header a:hover { color: var(--text); }
+
+    /* 제목 영역 */
+    .draw-title {
+      text-align: center;
+      padding: 0 20px 20px;
+    }
+
+    .draw-title h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      font-weight: 300;
+      font-style: italic;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .draw-title p {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    /* 캔버스 영역 */
+    .canvas-container {
+      position: relative;
+      width: calc(100% - 32px);
+      aspect-ratio: 1;
+      margin: 0 auto;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      overflow: hidden;
+      touch-action: none;
+      cursor: crosshair;
+      background: rgba(0,0,0,0.3);
+    }
+
+    .canvas-container canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* 별자리 프리뷰 캔버스 (변환 후) */
+    .preview-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      inset: 0;
+    }
+
+    /* 단계 표시 */
+    .step-indicator {
+      text-align: center;
+      padding: 16px;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* 툴바 */
+    .toolbar {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      padding: 12px 20px;
+    }
+
+    .tool-btn {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 50%;
+      color: var(--text-dim);
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tool-btn:hover {
+      border-color: rgba(255,255,255,0.25);
+      color: var(--text);
+    }
+
+    .tool-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 0 12px rgba(200,220,255,0.2);
+    }
+
+    /* 브러시 크기 표시 */
+    .brush-size {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 8px 20px;
+    }
+
+    .brush-size input[type="range"] {
+      -webkit-appearance: none;
+      width: 120px;
+      height: 2px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 1px;
+      outline: none;
+    }
+
+    .brush-size input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+    }
+
+    /* 하단 액션 */
+    .draw-actions {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-top: auto;
+      padding-bottom: 32px;
+    }
+
+    /* 메시지 폼 */
+    .message-section {
+      width: 100%;
+      padding: 0 20px;
+      transition: max-height 0.4s ease, opacity 0.3s ease;
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+    }
+
+    .message-section.open {
+      max-height: 500px;
+      opacity: 1;
+      padding-bottom: 20px;
+    }
+
+    .message-section .form-group {
+      margin-bottom: 12px;
+    }
+
+    .message-section label {
+      display: block;
+      font-size: 11px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+
+    .char-count {
+      text-align: right;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    /* 감사 모달 */
+    .thank-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(5,8,16,0.85);
+      backdrop-filter: blur(8px);
+      animation: fade-in 0.4s ease-out;
+    }
+
+    .thank-card {
+      text-align: center;
+      padding: 40px 32px;
+      max-width: 320px;
+    }
+
+    .thank-card .star-big {
+      font-size: 40px;
+      display: block;
+      margin-bottom: 20px;
+      animation: twinkle 2s ease-in-out infinite alternate;
+    }
+
+    .thank-card h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 24px;
+      font-weight: 300;
+      font-style: italic;
+      color: var(--text);
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .thank-card p {
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    /* 컬러 팔레트 */
+    .palette {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding: 10px 20px;
+    }
+
+    .palette-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      position: relative;
+    }
+
+    .palette-dot:hover {
+      transform: scale(1.15);
+    }
+
+    .palette-dot.active {
+      border-color: #fff;
+      box-shadow: 0 0 12px currentColor;
+    }
+  </style>
+</head>
+<body>
+  <!-- 별 배경 -->
+  <div class="starfield" id="starfield"></div>
+
+  <!-- 감사 모달 -->
+  <div class="thank-overlay hidden" id="thankModal">
+    <div class="thank-card">
+      <span class="star-big">✦</span>
+      <h3>별자리가 밤하늘에<br/>떠올랐어요</h3>
+      <p>축하해주셔서 정말 감사합니다.<br/>당신의 별자리가 혜승의 하늘을<br/>더 아름답게 빛내줄 거예요.</p>
+      <a href="index.html" class="btn-primary">✦ 밤하늘 보러가기</a>
+    </div>
+  </div>
+
+  <div class="draw-page">
+    <!-- 헤더 -->
+    <div class="draw-header">
+      <a href="index.html">← 돌아가기</a>
+      <span class="font-sans" style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em;">
+        Step <span id="stepNum">1</span>/2
+      </span>
+    </div>
+
+    <!-- 제목 -->
+    <div class="draw-title">
+      <h2 id="titleText">자유롭게 그려보세요</h2>
+      <p id="subtitleText">그림이 별자리로 변환됩니다</p>
+    </div>
+
+    <!-- 캔버스 -->
+    <div class="canvas-container" id="canvasContainer">
+      <canvas id="drawCanvas" width="400" height="400"></canvas>
+      <canvas id="previewCanvas" class="preview-canvas hidden" width="400" height="400"></canvas>
+    </div>
+
+    <!-- 툴바 (Step 1) -->
+    <div class="toolbar" id="toolbar">
+      <button class="tool-btn active" id="btnBrush" onclick="setTool('brush')" title="브러시">✦</button>
+      <button class="tool-btn" id="btnEraser" onclick="setTool('eraser')" title="지우개">◌</button>
+      <button class="tool-btn" id="btnUndo" onclick="undo()" title="되돌리기">↩</button>
+      <button class="tool-btn" id="btnClear" onclick="clearCanvas()" title="전체삭제">✕</button>
+    </div>
+
+    <!-- 컬러 팔레트 -->
+    <div class="palette" id="palette">
+      <button class="palette-dot active" data-color="rgba(200,220,255,0.85)" style="background: rgb(200,220,255); color: rgb(200,220,255);" title="화이트블루"></button>
+      <button class="palette-dot" data-color="rgba(255,180,200,0.85)" style="background: rgb(255,180,200); color: rgb(255,180,200);" title="로즈"></button>
+      <button class="palette-dot" data-color="rgba(200,160,255,0.85)" style="background: rgb(200,160,255); color: rgb(200,160,255);" title="라벤더"></button>
+      <button class="palette-dot" data-color="rgba(255,220,130,0.85)" style="background: rgb(255,220,130); color: rgb(255,220,130);" title="골드"></button>
+      <button class="palette-dot" data-color="rgba(130,230,200,0.85)" style="background: rgb(130,230,200); color: rgb(130,230,200);" title="민트"></button>
+      <button class="palette-dot" data-color="rgba(255,150,120,0.85)" style="background: rgb(255,150,120); color: rgb(255,150,120);" title="코랄"></button>
+    </div>
+
+    <!-- 브러시 크기 -->
+    <div class="brush-size" id="brushSize">
+      <span style="font-size: 11px; color: var(--text-dim);">가늘게</span>
+      <input type="range" id="sizeSlider" min="2" max="12" value="4" />
+      <span style="font-size: 11px; color: var(--text-dim);">굵게</span>
+    </div>
+
+    <!-- 메시지 폼 (Step 2) -->
+    <div class="message-section" id="messageSection">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <p class="font-serif" style="font-size: 16px; font-style: italic; color: var(--accent);">
+          당신의 별자리가 완성되었어요
+        </p>
+      </div>
+      <div class="form-group">
+        <label>별자리 이름</label>
+        <input class="input-field" id="inputName" type="text" placeholder="이름을 지어주세요 (선택)" maxlength="20" />
+      </div>
+      <div class="form-group">
+        <label>메시지</label>
+        <textarea class="input-field" id="inputMessage" placeholder="혜승에게 한마디 (선택)" maxlength="100" rows="3" style="resize: none;"></textarea>
+        <div class="char-count" id="charCount">0 / 100</div>
+      </div>
+    </div>
+
+    <!-- 하단 액션 -->
+    <div class="draw-actions">
+      <button class="btn-primary" id="btnConvert" onclick="convertToConstellation()">
+        ✦ 별자리로 변환하기
+      </button>
+      <button class="btn-primary hidden" id="btnSubmit" onclick="submitEntry()">
+        ✦ 밤하늘에 올리기
+      </button>
+      <button class="btn-ghost hidden" id="btnRetry" onclick="retryDrawing()">
+        다시 그리기
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // ===== 별 배경 =====
+    (function() {
+      const sf = document.getElementById('starfield');
+      for (let i = 0; i < 150; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'starfield-dot';
+        dot.style.left = Math.random() * 100 + '%';
+        dot.style.top = Math.random() * 100 + '%';
+        dot.style.width = (1 + Math.random() * 2) + 'px';
+        dot.style.height = dot.style.width;
+        dot.style.animationDuration = (2 + Math.random() * 4) + 's';
+        dot.style.animationDelay = Math.random() * 3 + 's';
+        sf.appendChild(dot);
+      }
+    })();
+  </script>
+
+  <script type="module">
+    import {
+      db, collection, addDoc, serverTimestamp
+    } from './firebase-config.js';
+
+    // ===== 캔버스 설정 =====
+    const canvas = document.getElementById('drawCanvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const previewCanvas = document.getElementById('previewCanvas');
+    const previewCtx = previewCanvas.getContext('2d');
+    const SIZE = 400;
+
+    let isDrawing = false;
+    let currentTool = 'brush';
+    let brushWidth = 4;
+    let undoStack = [];
+    const MAX_UNDO = 15;
+    let constellationData = null; // 변환된 별자리 좌표
+    let brushColor = 'rgba(200,220,255,0.85)';
+    let starColor = 'rgb(200,220,255)'; // 별자리 렌더링용 (불투명)
+
+    // ===== 팔레트 =====
+    function recolorCanvas(newColor) {
+      const imageData = ctx.getImageData(0, 0, SIZE, SIZE);
+      const data = imageData.data;
+      // newColor에서 r,g,b 추출
+      const m = newColor.match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+      if (!m) return;
+      const nr = +m[1], ng = +m[2], nb = +m[3];
+
+      for (let i = 0; i < data.length; i += 4) {
+        if (data[i + 3] > 0) {
+          data[i]     = nr;
+          data[i + 1] = ng;
+          data[i + 2] = nb;
+        }
+      }
+      ctx.putImageData(imageData, 0, 0);
+    }
+
+    document.querySelectorAll('.palette-dot').forEach(dot => {
+      dot.addEventListener('click', () => {
+        document.querySelectorAll('.palette-dot').forEach(d => d.classList.remove('active'));
+        dot.classList.add('active');
+        brushColor = dot.dataset.color;
+        starColor = dot.style.background;
+        // 기존 그림을 새 색상으로 변경
+        recolorCanvas(starColor);
+        setTool('brush');
+      });
+    });
+
+    // ===== 도구 =====
+    window.setTool = function(tool) {
+      currentTool = tool;
+      document.getElementById('btnBrush').classList.toggle('active', tool === 'brush');
+      document.getElementById('btnEraser').classList.toggle('active', tool === 'eraser');
+    };
+
+    document.getElementById('sizeSlider').addEventListener('input', (e) => {
+      brushWidth = parseInt(e.target.value);
+    });
+
+    // ===== Undo =====
+    function saveState() {
+      if (undoStack.length >= MAX_UNDO) undoStack.shift();
+      undoStack.push(ctx.getImageData(0, 0, SIZE, SIZE));
+    }
+
+    window.undo = function() {
+      if (undoStack.length === 0) return;
+      ctx.putImageData(undoStack.pop(), 0, 0);
+    };
+
+    window.clearCanvas = function() {
+      saveState();
+      ctx.clearRect(0, 0, SIZE, SIZE);
+    };
+
+    // ===== 그리기 =====
+    let lastX, lastY;
+
+    function getPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const scale = SIZE / rect.width;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: (clientX - rect.left) * scale,
+        y: (clientY - rect.top) * scale,
+      };
+    }
+
+    function drawLine(x1, y1, x2, y2) {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+
+      if (currentTool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.strokeStyle = 'rgba(0,0,0,1)';
+        ctx.lineWidth = brushWidth * 4;
+      } else {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = brushColor;
+        ctx.lineWidth = brushWidth;
+        ctx.shadowColor = brushColor;
+        ctx.shadowBlur = 8;
+      }
+
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    function onStart(e) {
+      e.preventDefault();
+      isDrawing = true;
+      saveState();
+      const pos = getPos(e);
+      lastX = pos.x;
+      lastY = pos.y;
+    }
+
+    function onMove(e) {
+      e.preventDefault();
+      if (!isDrawing) return;
+      const pos = getPos(e);
+      drawLine(lastX, lastY, pos.x, pos.y);
+      lastX = pos.x;
+      lastY = pos.y;
+    }
+
+    function onEnd(e) {
+      e.preventDefault();
+      isDrawing = false;
+    }
+
+    canvas.addEventListener('mousedown', onStart);
+    canvas.addEventListener('mousemove', onMove);
+    canvas.addEventListener('mouseup', onEnd);
+    canvas.addEventListener('mouseleave', onEnd);
+    canvas.addEventListener('touchstart', onStart, { passive: false });
+    canvas.addEventListener('touchmove', onMove, { passive: false });
+    canvas.addEventListener('touchend', onEnd);
+
+    // ================================================================
+    // 별자리 변환 로직
+    // ================================================================
+
+    // 1. 캔버스에서 그려진 픽셀의 윤곽 좌표 추출
+    function extractPoints() {
+      const imageData = ctx.getImageData(0, 0, SIZE, SIZE);
+      const data = imageData.data;
+      const points = [];
+
+      // 그리드 샘플링 — 일정 간격으로 스캔하여 그려진 부분 좌표 수집
+      const step = 8;
+      for (let y = 0; y < SIZE; y += step) {
+        for (let x = 0; x < SIZE; x += step) {
+          const idx = (y * SIZE + x) * 4;
+          // 알파값이 일정 이상이면 그려진 부분
+          if (data[idx + 3] > 30) {
+            points.push({ x, y });
+          }
+        }
+      }
+
+      return points;
+    }
+
+    // 2. 점들을 클러스터링하여 대표 별점 추출 (8~15개)
+    function sampleStarPoints(points, targetCount) {
+      if (points.length === 0) return [];
+      if (points.length <= targetCount) return points;
+
+      // k-means 간소화: 랜덤 시드 → 반복 할당
+      const k = Math.min(targetCount, Math.max(8, Math.min(15, Math.ceil(points.length / 6))));
+      let centers = [];
+
+      // 초기 시드: 균등 샘플
+      const shuffled = [...points].sort(() => Math.random() - 0.5);
+      for (let i = 0; i < k; i++) {
+        centers.push({ ...shuffled[i] });
+      }
+
+      // 3번 반복
+      for (let iter = 0; iter < 3; iter++) {
+        const clusters = Array.from({ length: k }, () => []);
+        for (const p of points) {
+          let minDist = Infinity;
+          let closest = 0;
+          for (let c = 0; c < k; c++) {
+            const dx = p.x - centers[c].x;
+            const dy = p.y - centers[c].y;
+            const d = dx * dx + dy * dy;
+            if (d < minDist) { minDist = d; closest = c; }
+          }
+          clusters[closest].push(p);
+        }
+        for (let c = 0; c < k; c++) {
+          if (clusters[c].length === 0) continue;
+          const avgX = clusters[c].reduce((s, p) => s + p.x, 0) / clusters[c].length;
+          const avgY = clusters[c].reduce((s, p) => s + p.y, 0) / clusters[c].length;
+          centers[c] = { x: Math.round(avgX), y: Math.round(avgY) };
+        }
+      }
+
+      return centers;
+    }
+
+    // 3. 별점들을 가장 가까운 이웃 순으로 연결 (nearest-neighbor path)
+    function orderByNearestNeighbor(stars) {
+      if (stars.length <= 2) return stars;
+      const ordered = [stars[0]];
+      const remaining = stars.slice(1);
+
+      while (remaining.length > 0) {
+        const last = ordered[ordered.length - 1];
+        let minDist = Infinity;
+        let minIdx = 0;
+        for (let i = 0; i < remaining.length; i++) {
+          const dx = last.x - remaining[i].x;
+          const dy = last.y - remaining[i].y;
+          const d = dx * dx + dy * dy;
+          if (d < minDist) { minDist = d; minIdx = i; }
+        }
+        ordered.push(remaining.splice(minIdx, 1)[0]);
+      }
+
+      return ordered;
+    }
+
+    // 4. 별자리 프리뷰 렌더링
+    // color: "rgb(r,g,b)" 형식 문자열
+    function renderConstellation(targetCtx, stars, width, height, options = {}) {
+      const { clear = true, dotSize = 3, lineWidth = 1, glowSize = 8, color = null } = options;
+      if (clear) {
+        targetCtx.clearRect(0, 0, width, height);
+      }
+
+      if (stars.length === 0) return;
+
+      // 색상 파싱 — "rgb(r,g,b)" → {r,g,b}
+      let r = 200, g = 220, b = 255;
+      if (color) {
+        const m = color.match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+        if (m) { r = +m[1]; g = +m[2]; b = +m[3]; }
+      }
+
+      // 연결선
+      targetCtx.beginPath();
+      targetCtx.moveTo(stars[0].x, stars[0].y);
+      for (let i = 1; i < stars.length; i++) {
+        targetCtx.lineTo(stars[i].x, stars[i].y);
+      }
+      targetCtx.strokeStyle = `rgba(${r},${g},${b},0.3)`;
+      targetCtx.lineWidth = lineWidth;
+      targetCtx.stroke();
+
+      // 별점
+      for (const s of stars) {
+        // 글로우
+        targetCtx.beginPath();
+        targetCtx.arc(s.x, s.y, glowSize, 0, Math.PI * 2);
+        const grad = targetCtx.createRadialGradient(s.x, s.y, 0, s.x, s.y, glowSize);
+        grad.addColorStop(0, `rgba(${r},${g},${b},0.6)`);
+        grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+        targetCtx.fillStyle = grad;
+        targetCtx.fill();
+
+        // 중심 점
+        targetCtx.beginPath();
+        targetCtx.arc(s.x, s.y, dotSize, 0, Math.PI * 2);
+        targetCtx.fillStyle = `rgb(${r},${g},${b})`;
+        targetCtx.fill();
+      }
+    }
+
+    // ===== 변환 버튼 핸들러 =====
+    window.convertToConstellation = function() {
+      const imageData = ctx.getImageData(0, 0, SIZE, SIZE);
+      const isEmpty = !imageData.data.some((v, i) => i % 4 === 3 && v > 30);
+      if (isEmpty) {
+        alert('먼저 무언가를 그려주세요 ✦');
+        return;
+      }
+
+      // 변환
+      const rawPoints = extractPoints();
+      const starPoints = sampleStarPoints(rawPoints, 12);
+      const ordered = orderByNearestNeighbor(starPoints);
+      constellationData = ordered;
+
+      // 프리뷰 보이기
+      previewCanvas.classList.remove('hidden');
+      canvas.style.opacity = '0.15';
+      renderConstellation(previewCtx, ordered, SIZE, SIZE, { color: starColor });
+
+      // UI 전환 → Step 2
+      document.getElementById('stepNum').textContent = '2';
+      document.getElementById('titleText').textContent = '별자리가 완성되었어요';
+      document.getElementById('subtitleText').textContent = '이름과 메시지를 남겨보세요';
+      document.getElementById('toolbar').classList.add('hidden');
+      document.getElementById('palette').classList.add('hidden');
+      document.getElementById('brushSize').classList.add('hidden');
+      document.getElementById('btnConvert').classList.add('hidden');
+      document.getElementById('btnSubmit').classList.remove('hidden');
+      document.getElementById('btnRetry').classList.remove('hidden');
+      document.getElementById('messageSection').classList.add('open');
+    };
+
+    // ===== 다시 그리기 =====
+    window.retryDrawing = function() {
+      previewCanvas.classList.add('hidden');
+      previewCtx.clearRect(0, 0, SIZE, SIZE);
+      canvas.style.opacity = '1';
+      constellationData = null;
+
+      document.getElementById('stepNum').textContent = '1';
+      document.getElementById('titleText').textContent = '자유롭게 그려보세요';
+      document.getElementById('subtitleText').textContent = '그림이 별자리로 변환됩니다';
+      document.getElementById('toolbar').classList.remove('hidden');
+      document.getElementById('palette').classList.remove('hidden');
+      document.getElementById('brushSize').classList.remove('hidden');
+      document.getElementById('btnConvert').classList.remove('hidden');
+      document.getElementById('btnSubmit').classList.add('hidden');
+      document.getElementById('btnRetry').classList.add('hidden');
+      document.getElementById('messageSection').classList.remove('open');
+    };
+
+    // ===== 글자수 =====
+    const inputMessage = document.getElementById('inputMessage');
+    const charCount = document.getElementById('charCount');
+    inputMessage.addEventListener('input', () => {
+      charCount.textContent = `${inputMessage.value.length} / 100`;
+    });
+
+    // ===== Firebase 저장 =====
+    window.submitEntry = async function() {
+      if (!constellationData || constellationData.length === 0) return;
+
+      const btn = document.getElementById('btnSubmit');
+      btn.textContent = '올리는 중...';
+      btn.style.pointerEvents = 'none';
+
+      try {
+        // 좌표를 0~1 정규화하여 저장
+        const normalizedStars = constellationData.map(s => ({
+          x: +(s.x / SIZE).toFixed(4),
+          y: +(s.y / SIZE).toFixed(4),
+        }));
+
+        const name = document.getElementById('inputName').value.trim() || '';
+        const message = inputMessage.value.trim() || '';
+
+        await addDoc(collection(db, 'entries'), {
+          stars: normalizedStars,
+          color: starColor,
+          name,
+          message,
+          timestamp: serverTimestamp(),
+        });
+
+        // 감사 모달 표시
+        document.getElementById('thankModal').classList.remove('hidden');
+      } catch (err) {
+        console.error('저장 실패:', err.code, err.message);
+        alert('저장에 실패했어요. 다시 시도해주세요.');
+        btn.textContent = '✦ 밤하늘에 올리기';
+        btn.style.pointerEvents = '';
+      }
+    };
+  </script>
+</body>
+</html>
