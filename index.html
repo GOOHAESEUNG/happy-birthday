@@ -536,7 +536,7 @@
         if (right.length() < 0.01) right.set(1, 0, 0);
         const localUp = new THREE.Vector3().crossVectors(centerDir, right).normalize();
 
-        const starScale = 16;
+        const starScale = 12;
 
         // 별점 3D 좌표
         const pts3d = entry.stars.map(s => {
@@ -562,7 +562,7 @@
           });
           const sprite = new THREE.Sprite(spriteMat);
           sprite.position.copy(pos);
-          sprite.scale.set(2.8, 2.8, 1);
+          sprite.scale.set(2.2, 2.2, 1);
           sprite.userData.entry = entry;
           constellationGroup.add(sprite);
         });
