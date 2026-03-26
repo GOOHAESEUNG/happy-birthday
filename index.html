@@ -184,10 +184,12 @@
 
   <!-- BGM 토글 -->
   <button class="bgm-toggle muted" id="bgmToggle" title="배경음악">♪</button>
+  <div id="bgmHint" style="position:fixed; top:56px; right:10px; z-index:20; font-family:'Inter',sans-serif; font-size:11px; color:rgba(200,220,255,0.5); text-align:right; pointer-events:none; animation: fade-in 0.5s ease-out;">
+    ↑ 누르면 음악이 나와요
+  </div>
 
   <!-- 힌트 -->
   <div class="hint" id="hint">
-    화면을 터치하면 음악이 시작돼요<br/>
     드래그하여 밤하늘을 둘러보세요<br/>
     별자리를 클릭하면 메시지를 볼 수 있어요<br/>
     <span style="font-size: 20px; opacity: 0.5;">↔ ↕</span>
@@ -929,6 +931,8 @@
         bgmPlaying = true;
       }
       bgmBtn.classList.remove('muted');
+      const bgmHint = document.getElementById('bgmHint');
+      if (bgmHint) bgmHint.style.display = 'none';
     }
 
     function stopBGM() {
