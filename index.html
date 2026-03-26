@@ -927,11 +927,15 @@
       bgmPlaying ? stopBGM() : startBGM();
     });
 
-    // 자동 재생 (첫 터치/클릭 시 — 브라우저 정책상 유저 인터랙션 필요)
+    // 자동 재생 (첫 인터랙션 시 — 모바일 브라우저 호환)
     function autoPlay() {
       startBGM();
+      document.removeEventListener('click', autoPlay);
+      document.removeEventListener('touchstart', autoPlay);
       document.removeEventListener('pointerdown', autoPlay);
     }
+    document.addEventListener('click', autoPlay);
+    document.addEventListener('touchstart', autoPlay);
     document.addEventListener('pointerdown', autoPlay);
   </script>
 </body>
