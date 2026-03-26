@@ -12,6 +12,7 @@
       flex-direction: column;
       position: relative;
       z-index: 1;
+      padding-bottom: 100px;
     }
 
     /* 상단 헤더 */
@@ -151,15 +152,25 @@
       cursor: pointer;
     }
 
-    /* 하단 액션 */
+    /* 하단 액션 — 화면 하단 고정 */
     .draw-actions {
-      padding: 20px;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      padding: 16px 20px;
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
-      margin-top: auto;
-      padding-bottom: 32px;
+      gap: 10px;
+      background: linear-gradient(to top, rgba(5,8,16,0.95) 60%, transparent);
+      pointer-events: none;
+    }
+
+    .draw-actions > * {
+      pointer-events: auto;
     }
 
     /* 메시지 폼 */
