@@ -678,6 +678,14 @@
       return null;
     }
 
+    // ===== BGM 자동 재생 =====
+    let autoPlayed = false;
+    function autoPlay() {
+      if (autoPlayed) return;
+      autoPlayed = true;
+      startBGM();
+    }
+
     // ===== 터치/마우스 컨트롤 =====
     let isDragging = false;
     let prevX = 0, prevY = 0;
@@ -697,6 +705,8 @@
       dragDist = 0;
       velX = 0; velY = 0;
       document.getElementById('hint').style.opacity = '0';
+      // 드래그 시작 시 BGM 자동 재생
+      if (!autoPlayed) autoPlay();
     });
 
     canvas.addEventListener('pointermove', (e) => {
@@ -941,22 +951,7 @@
     });
 
     // 자동 재생 (첫 인터랙션 시 — 모바일 브라우저 호환)
-    let autoPlayed = false;
-    function autoPlay() {
-      if (autoPlayed) return;
-      autoPlayed = true;
-      startBGM();
-      document.removeEventListener('click', autoPlay);
-      document.removeEventListener('touchstart', autoPlay);
-      document.removeEventListener('touchend', autoPlay);
-      document.removeEventListener('pointerdown', autoPlay);
-      document.removeEventListener('pointerup', autoPlay);
-    }
-    document.addEventListener('click', autoPlay);
-    document.addEventListener('touchstart', autoPlay);
-    document.addEventListener('touchend', autoPlay);
-    document.addEventListener('pointerdown', autoPlay);
-    document.addEventListener('pointerup', autoPlay);
+    // autoPlay는 캔버스 pointerdown에서도 호출됨 (위에서 참조)
   </script>
 </body>
 </html>
