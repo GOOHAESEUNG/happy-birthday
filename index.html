@@ -947,11 +947,15 @@
       autoPlayed = true;
       startBGM();
       document.removeEventListener('click', autoPlay);
+      document.removeEventListener('touchstart', autoPlay);
       document.removeEventListener('touchend', autoPlay);
+      document.removeEventListener('pointerdown', autoPlay);
       document.removeEventListener('pointerup', autoPlay);
     }
     document.addEventListener('click', autoPlay);
+    document.addEventListener('touchstart', autoPlay);
     document.addEventListener('touchend', autoPlay);
+    document.addEventListener('pointerdown', autoPlay);
     document.addEventListener('pointerup', autoPlay);
   </script>
 </body>
