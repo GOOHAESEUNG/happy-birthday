@@ -800,7 +800,7 @@
 
     function createBirthdayBGM() {
       const master = audioCtx.createGain();
-      master.gain.value = 0.2;
+      master.gain.value = 0.4;
       master.connect(audioCtx.destination);
 
       // 깊은 리버브 (다중 딜레이 → 몽환적 울림)
@@ -912,20 +912,21 @@
     function startBGM() {
       bgmPlaying = true;
       if (!audioCtx) {
-        // iOS 오디오 잠금 해제: 이벤트 핸들러 안에서 동기적으로 생성
+        // iOS 오디오 잠금 해제: 동기적으로 생성 + resume + 소리 출력
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        // iOS용 무음 버퍼 재생 (오디오 잠금 해제 트리거)
-        const silent = audioCtx.createBuffer(1, 1, 22050);
+        // 무음 버퍼로 unlock
+        const buf = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
         const src = audioCtx.createBufferSource();
-        src.buffer = silent;
+        src.buffer = buf;
         src.connect(audioCtx.destination);
         src.start(0);
-        // 잠금 해제 후 BGM 생성
-        audioCtx.resume().then(() => {
-          createBirthdayBGM();
-        });
+        // 동기적으로 resume 호출 (결과 기다리지 않음)
+        audioCtx.resume();
+        // 동기적으로 BGM 생성 (같은 이벤트 핸들러 내)
+        createBirthdayBGM();
       } else {
         audioCtx.resume();
+        bgmPlaying = true;
       }
       bgmBtn.classList.remove('muted');
     }
