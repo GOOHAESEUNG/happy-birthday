@@ -647,35 +647,6 @@
     });
     canvas.addEventListener('pointerleave', () => { isDragging = false; });
 
-    // ===== 자이로스코프 (모바일) =====
-    let gyroEnabled = false;
-    let baseAlpha = null, baseBeta = null;
-
-    function enableGyro() {
-      if (gyroEnabled) return;
-      window.addEventListener('deviceorientation', (e) => {
-        if (baseAlpha === null) {
-          baseAlpha = e.alpha || 0;
-          baseBeta = e.beta || 0;
-        }
-        const da = ((e.alpha || 0) - baseAlpha) * Math.PI / 180;
-        const db = ((e.beta || 0) - baseBeta) * Math.PI / 180;
-        rotY = -da * 0.5;
-        rotX = Math.max(-Math.PI * 0.45, Math.min(Math.PI * 0.45, -db * 0.3));
-      });
-      gyroEnabled = true;
-    }
-
-    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-      canvas.addEventListener('click', () => {
-        DeviceOrientationEvent.requestPermission().then(r => {
-          if (r === 'granted') enableGyro();
-        });
-      }, { once: true });
-    } else {
-      enableGyro();
-    }
-
     // ===== 애니메이션 루프 =====
     const clock = new THREE.Clock();
 
