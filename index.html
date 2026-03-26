@@ -799,7 +799,6 @@
     const bgmBtn = document.getElementById('bgmToggle');
 
     function createBirthdayBGM() {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       const master = audioCtx.createGain();
       master.gain.value = 0.2;
       master.connect(audioCtx.destination);
@@ -912,8 +911,22 @@
 
     function startBGM() {
       bgmPlaying = true;
-      if (!audioCtx) createBirthdayBGM();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (!audioCtx) {
+        // iOS 오디오 잠금 해제: 이벤트 핸들러 안에서 동기적으로 생성
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // iOS용 무음 버퍼 재생 (오디오 잠금 해제 트리거)
+        const silent = audioCtx.createBuffer(1, 1, 22050);
+        const src = audioCtx.createBufferSource();
+        src.buffer = silent;
+        src.connect(audioCtx.destination);
+        src.start(0);
+        // 잠금 해제 후 BGM 생성
+        audioCtx.resume().then(() => {
+          createBirthdayBGM();
+        });
+      } else {
+        audioCtx.resume();
+      }
       bgmBtn.classList.remove('muted');
     }
 
