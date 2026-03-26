@@ -183,7 +183,10 @@
   <canvas id="domeCanvas"></canvas>
 
   <!-- BGM 토글 -->
-  <button class="bgm-toggle muted" id="bgmToggle" title="배경음악">♪</button>
+  <div style="position:fixed; top:16px; right:16px; z-index:20; display:flex; align-items:center; gap:8px;">
+    <span id="bgmLabel" style="font-family:'Inter',sans-serif; font-size:11px; color:rgba(200,220,255,0.4); white-space:nowrap;">음악 재생 →</span>
+    <button class="bgm-toggle muted" id="bgmToggle" title="배경음악" style="position:static;">♪</button>
+  </div>
 
   <!-- 힌트 -->
   <div class="hint" id="hint">
@@ -928,6 +931,8 @@
         bgmPlaying = true;
       }
       bgmBtn.classList.remove('muted');
+      const lbl = document.getElementById('bgmLabel');
+      if (lbl) lbl.style.display = 'none';
     }
 
     function stopBGM() {
