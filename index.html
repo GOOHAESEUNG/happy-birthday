@@ -800,7 +800,7 @@
 
     function createBirthdayBGM() {
       const master = audioCtx.createGain();
-      master.gain.value = 0.4;
+      master.gain.value = 0.25;
       master.connect(audioCtx.destination);
 
       // 깊은 리버브 (다중 딜레이 → 몽환적 울림)
@@ -942,15 +942,18 @@
     });
 
     // 자동 재생 (첫 인터랙션 시 — 모바일 브라우저 호환)
+    let autoPlayed = false;
     function autoPlay() {
+      if (autoPlayed) return;
+      autoPlayed = true;
       startBGM();
       document.removeEventListener('click', autoPlay);
-      document.removeEventListener('touchstart', autoPlay);
-      document.removeEventListener('pointerdown', autoPlay);
+      document.removeEventListener('touchend', autoPlay);
+      document.removeEventListener('pointerup', autoPlay);
     }
     document.addEventListener('click', autoPlay);
-    document.addEventListener('touchstart', autoPlay);
-    document.addEventListener('pointerdown', autoPlay);
+    document.addEventListener('touchend', autoPlay);
+    document.addEventListener('pointerup', autoPlay);
   </script>
 </body>
 </html>
