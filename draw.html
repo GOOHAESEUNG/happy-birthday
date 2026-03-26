@@ -771,6 +771,11 @@
       document.getElementById('btnSubmit').classList.remove('hidden');
       document.getElementById('btnRetry').classList.remove('hidden');
       document.getElementById('messageSection').classList.add('open');
+
+      // 메시지 입력란이 보이도록 자동 스크롤
+      setTimeout(() => {
+        document.getElementById('messageSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 350);
     };
 
     // ===== 다시 그리기 =====
