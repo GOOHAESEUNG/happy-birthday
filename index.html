@@ -184,9 +184,6 @@
 
   <!-- BGM 토글 -->
   <button class="bgm-toggle muted" id="bgmToggle" title="배경음악">♪</button>
-  <div id="bgmHint" style="position:fixed; top:56px; right:10px; z-index:20; font-family:'Inter',sans-serif; font-size:11px; color:rgba(200,220,255,0.5); text-align:right; pointer-events:none; animation: fade-in 0.5s ease-out;">
-    ↑ 누르면 음악이 나와요
-  </div>
 
   <!-- 힌트 -->
   <div class="hint" id="hint">
@@ -802,7 +799,7 @@
 
     function createBirthdayBGM() {
       const master = audioCtx.createGain();
-      master.gain.value = 0.25;
+      master.gain.value = 0.15;
       master.connect(audioCtx.destination);
 
       // 깊은 리버브 (다중 딜레이 → 몽환적 울림)
@@ -931,8 +928,6 @@
         bgmPlaying = true;
       }
       bgmBtn.classList.remove('muted');
-      const bgmHint = document.getElementById('bgmHint');
-      if (bgmHint) bgmHint.style.display = 'none';
     }
 
     function stopBGM() {
