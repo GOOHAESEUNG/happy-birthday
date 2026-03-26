@@ -512,7 +512,7 @@
         constellationGroup.remove(child);
       }
 
-      const golden = 0.618033988749895;
+      const total = entries.length;
 
       entries.forEach((entry, idx) => {
         if (!entry.stars || entry.stars.length === 0) return;
@@ -520,9 +520,9 @@
         const [cr, cg, cb] = parseColor(entry.color);
         const color = new THREE.Color(`rgb(${cr},${cg},${cb})`);
 
-        // 골든 비율로 구 표면에 분산
-        const theta = idx * golden * Math.PI * 2;
-        const phi = Math.acos(1 - 2 * ((idx * golden) % 1));
+        // Fibonacci sphere — 균등 분산 배치
+        const phi = Math.acos(1 - 2 * (idx + 0.5) / Math.max(total, 1));
+        const theta = Math.PI * (1 + Math.sqrt(5)) * idx;
 
         const centerDir = new THREE.Vector3(
           Math.sin(phi) * Math.cos(theta),
