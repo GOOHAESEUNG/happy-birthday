@@ -451,13 +451,13 @@
     // 라벨 텍스처
     function createLabelTexture(text, r, g, b) {
       const c = document.createElement('canvas');
-      c.width = 256; c.height = 64;
+      c.width = 512; c.height = 128;
       const ctx = c.getContext('2d');
-      ctx.font = 'italic 28px Cormorant Garamond, Georgia, serif';
+      ctx.font = 'italic 56px Cormorant Garamond, Georgia, serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = `rgba(${r},${g},${b},0.7)`;
-      ctx.fillText(text, 128, 32);
+      ctx.fillText(text, 256, 64);
       return new THREE.CanvasTexture(c);
     }
 
@@ -539,7 +539,7 @@
           const labelPos = centerDir.clone().multiplyScalar(DOME_RADIUS)
             .add(localUp.clone().multiplyScalar(starScale * 0.5));
           label.position.copy(labelPos);
-          label.scale.set(6, 1.8, 1);
+          label.scale.set(10, 3, 1);
           constellationGroup.add(label);
         }
       });
