@@ -536,7 +536,11 @@
         if (right.length() < 0.01) right.set(1, 0, 0);
         const localUp = new THREE.Vector3().crossVectors(centerDir, right).normalize();
 
-        const starScale = 12;
+        // 개수에 따라 별자리 크기 자동 조절
+        const starScale = total <= 20 ? 18
+          : total <= 60 ? 14
+          : total <= 120 ? 10
+          : 7;
 
         // 별점 3D 좌표
         const pts3d = entry.stars.map(s => {
@@ -562,7 +566,11 @@
           });
           const sprite = new THREE.Sprite(spriteMat);
           sprite.position.copy(pos);
-          sprite.scale.set(2.2, 2.2, 1);
+          const dotSize = total <= 20 ? 3.0
+            : total <= 60 ? 2.5
+            : total <= 120 ? 1.8
+            : 1.4;
+          sprite.scale.set(dotSize, dotSize, 1);
           sprite.userData.entry = entry;
           constellationGroup.add(sprite);
         });
