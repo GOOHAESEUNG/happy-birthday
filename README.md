@@ -15,13 +15,13 @@
 ### 별자리 그리기
 
 <div align="center">
-  <img src="screenshots/draw.gif" width="640" alt="별자리 그리기" />
+  <img src="screenshots/draw.gif" width="360" alt="별자리 그리기" />
 </div>
 
 ### 생일 축하 카드
 
 <div align="center">
-  <img src="screenshots/card.png" width="640" alt="생일 축하 카드" />
+  <img src="screenshots/card.png" width="360" alt="생일 축하 카드" />
 </div>
 
 ---
