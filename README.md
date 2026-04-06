@@ -7,13 +7,22 @@
 ## 스크린샷
 
 ### 메인 — 밤하늘
-![메인 화면](screenshots/main.gif)
+
+<div align="center">
+  <img src="screenshots/main.gif" width="640" alt="메인 화면" />
+</div>
 
 ### 별자리 그리기
-![별자리 그리기](screenshots/draw.gif)
+
+<div align="center">
+  <img src="screenshots/draw.gif" width="640" alt="별자리 그리기" />
+</div>
 
 ### 생일 축하 카드
-![방명록](screenshots/guestbook.png)
+
+<div align="center">
+  <img src="screenshots/card.png" width="640" alt="생일 축하 카드" />
+</div>
 
 ---
 
