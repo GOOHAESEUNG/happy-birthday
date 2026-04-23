@@ -288,26 +288,47 @@
       return card;
     }
 
-    // 실시간 구독
-    const q = query(collection(db, 'entries'), orderBy('timestamp', 'desc'));
-    onSnapshot(q, (snapshot) => {
+    // entries.json 먼저 렌더 → Firestore 응답 오면 덮어쓰기
+    let firestoreReceived = false;
+    function applyEntries(entries) {
       const existingCards = cardList.querySelectorAll('.constellation-card');
       existingCards.forEach(c => c.remove());
-
-      const count = snapshot.size;
-      totalCount.textContent = count;
-
-      if (count === 0) {
+      totalCount.textContent = entries.length;
+      if (entries.length === 0) {
         emptyState.classList.remove('hidden');
       } else {
         emptyState.classList.add('hidden');
-        let i = 0;
-        snapshot.forEach((doc) => {
-          cardList.appendChild(renderCard(doc.data(), i));
-          i++;
+        entries.forEach((data, i) => {
+          cardList.appendChild(renderCard(data, i));
         });
       }
-    });
+    }
+
+    try {
+      const res = await fetch('./entries.json', { cache: 'no-cache' });
+      if (res.ok) {
+        const entries = await res.json();
+        const valid = entries.filter((e) => e.stars && e.stars.length > 0);
+        if (!firestoreReceived) applyEntries(valid);
+      }
+    } catch (err) {
+      console.warn('entries.json 로드 실패:', err);
+    }
+
+    const q = query(collection(db, 'entries'), orderBy('timestamp', 'desc'));
+    onSnapshot(
+      q,
+      (snapshot) => {
+        if (snapshot.metadata.fromCache) return;
+        firestoreReceived = true;
+        const entries = [];
+        snapshot.forEach((doc) => entries.push(doc.data()));
+        applyEntries(entries);
+      },
+      (err) => {
+        console.warn('Firestore 구독 실패, entries.json 데이터 유지:', err);
+      }
+    );
   </script>
   <script defer src="/_vercel/insights/script.js"></script>
 </body>

@@ -787,20 +787,44 @@
     }
     window.addEventListener('resize', onResize);
 
-    // ===== Firebase 실시간 구독 =====
-    const q = query(collection(db, 'entries'), orderBy('timestamp', 'desc'));
-    onSnapshot(q, (snapshot) => {
-      const entries = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        if (data.stars && data.stars.length > 0) {
-          entries.push(data);
-        }
-      });
-
+    // ===== 데이터 로드: entries.json 먼저 렌더 → Firestore 응답 오면 덮어쓰기 =====
+    // DB가 사라져도 entries.json 만으로 영구 동작.
+    let firestoreReceived = false;
+    function applyEntries(entries) {
       document.getElementById('totalCount').textContent = entries.length;
       buildConstellations(entries);
-    });
+    }
+
+    // 1) 정적 파일 먼저 렌더
+    try {
+      const res = await fetch('./entries.json', { cache: 'no-cache' });
+      if (res.ok) {
+        const entries = await res.json();
+        const valid = entries.filter((e) => e.stars && e.stars.length > 0);
+        if (!firestoreReceived) applyEntries(valid);
+      }
+    } catch (err) {
+      console.warn('entries.json 로드 실패:', err);
+    }
+
+    // 2) Firestore 실시간 구독 (서버 응답만 반영, 캐시/오프라인 응답은 무시 → JSON 유지)
+    const q = query(collection(db, 'entries'), orderBy('timestamp', 'desc'));
+    onSnapshot(
+      q,
+      (snapshot) => {
+        if (snapshot.metadata.fromCache) return;
+        firestoreReceived = true;
+        const entries = [];
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.stars && data.stars.length > 0) entries.push(data);
+        });
+        applyEntries(entries);
+      },
+      (err) => {
+        console.warn('Firestore 구독 실패, entries.json 데이터 유지:', err);
+      }
+    );
 
     animate();
 
